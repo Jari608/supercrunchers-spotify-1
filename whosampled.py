@@ -2,14 +2,20 @@ import requests
 import json
 import argparse
 import pathlib
+import re
 
 from bs4 import BeautifulSoup
 
+from spotify_fetch import fetch as spotify_fetch
 '''
 ## WHOSAMPLED SCRAPER ##
 
 Author: Jari Burgers
 Course: SuperCrunchers - JADS Den Bosch
+
+This Scraper fetches all remixes, covers and sampled track for a given track.
+For each remix, cover or sample, track information is scraped from spotify.
+For each track, a json file is created containing the information for each song.
 
 '''
 
@@ -57,7 +63,7 @@ class Scraper:
             'li', attrs={'class': "listEntry"})
 
         if not search_results:
-            return None
+            return None, None
 
         # return first result
         link = [i.a for i in search_results][0].get('href')
@@ -114,6 +120,8 @@ class Scraper:
 
     def get_tracks(self, artist, title):
 
+        s = Scraper(3)
+
         response_cov = []
         response_rem = []
         response_sam = []
@@ -141,28 +149,44 @@ class Scraper:
     
     def generate_output(self, input, verbose):
 
+        s = Scraper(3)
+
         artist, title = s.search(input)
+
+        if not artist == None:
         
-        covers, remixes, sampled = s.get_tracks(artist, title)
+            covers, remixes, sampled = s.get_tracks(artist, title)
 
-        data = {}
-        data['Artist'] = artist
-        data['title'] = title
-        data['Metrics'] = []
-        data['Metrics'].append({
-            'n_covers': len(covers),
-            'n_remixes': len(remixes),
-            'n_sampled': len(sampled) 
-        })
-        data['covers'] = list(covers)
-        data['remixes'] = list(remixes)
-        data['sampled'] = list(sampled)
+            covers_dict = {x: spotify_fetch(x) for x in covers}
+            remixes_dict = {x: spotify_fetch(re.sub(r'^.*?\'s ', ' ', x)) for x in remixes} #remixes get found better without original artist on spotify
+            samples_dict = {x: spotify_fetch(x) for x in sampled}
 
-        with open("Data/{}_{}.json".format(artist, title), "w") as f:
-            json.dump(data, f)
+            data = {}
+            data['Artist'] = artist
+            data['title'] = title
+            data['Metrics'] = []
+            data['Metrics'].append({
+                'n_covers': len(covers),
+                'n_remixes': len(remixes),
+                'n_sampled': len(sampled) 
+            })
+            data['covers'] = covers_dict
+            data['remixes'] = remixes_dict
+            data['sampled'] = samples_dict
+            data['spotify_data'] = spotify_fetch(artist + ' ' + title)
 
-        if verbose:
-            print(json.dumps(data, indent = 4))
+            location = "Data/json/{}_{}.json".format(artist, title)
+
+            with open(location, "w") as f:
+                json.dump(data, f)
+
+            if verbose:
+                print(json.dumps(data, indent = 4))
+            
+            return location
+        
+        else:
+            return None
 
 
 if __name__ == "__main__":
@@ -177,6 +201,7 @@ if __name__ == "__main__":
     s = Scraper(3)
 
     pathlib.Path("Data/").mkdir(exist_ok = True)
+    pathlib.Path("Data/json/").mkdir(exist_ok = True)
 
     s.generate_output(args.title, args.verbose)
 
