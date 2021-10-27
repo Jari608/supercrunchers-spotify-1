@@ -11,10 +11,6 @@ from bs4 import BeautifulSoup
 Author: Jari Burgers
 Course: SuperCrunchers - JADS Den Bosch
 
-to-do:
-    - argparse
-    - automatic formating of artist and title
-    - implement search function
 '''
 
 class Scraper:
@@ -40,6 +36,36 @@ class Scraper:
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
         }
     
+    def search(self, song_title): #function from samplify
+        """ Queries whosampled.com for song, returns relevant links
+        Description:
+        - Builds query string with `song_title` and `artist_name`
+        - whosampled is doing the heavy lifting for 'relevance',
+          as only the top result for a given query is taken
+        Parameters:
+          song_title:
+          - <str> song title, e.g 'Teenage Love'
+          artist_name:
+          - <str> artist name, e.g 'Slick Rick'
+        """
+
+        query = song_title.replace(' ', '%20')
+        url = f'https://www.whosampled.com/search/tracks/?q={query}'
+        r = self.req.get(url)
+        search_page_soup = BeautifulSoup(r.content, 'html.parser')
+        search_results = search_page_soup.findAll(
+            'li', attrs={'class': "listEntry"})
+
+        if not search_results:
+            return None
+
+        # return first result
+        link = [i.a for i in search_results][0].get('href')
+
+        link_r = list(filter(None, link.split('/')))
+
+        return link_r[0], link_r[1]
+        
     def fetch(self, url):
 
         songs = []
@@ -113,11 +139,9 @@ class Scraper:
 
         return cov, rem, sam
     
-    def format_input(self, input):
-        output = input
-        return output
+    def generate_output(self, input, verbose):
 
-    def generate_output(self, artist, title):
+        artist, title = s.search(input)
         
         covers, remixes, sampled = s.get_tracks(artist, title)
 
@@ -137,25 +161,24 @@ class Scraper:
         with open("Data/{}_{}.json".format(artist, title), "w") as f:
             json.dump(data, f)
 
-        print(json.dumps(data, indent = 4))
+        if verbose:
+            print(json.dumps(data, indent = 4))
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, 
         description = "A tool which retrieves all samples, remixes and covers for a given song from WhoSampled.com",
-        epilog = "Example call: python main.py Donna-Summer I-Feel-Love") #default will be shown using the --help command
-
-    parser.add_argument("artist", type = str, help = "Artist of the song")
+        epilog = "Example call: python whosampled.py 'donna summer i feel love'") #default will be shown using the --help command
     parser.add_argument("title", type = str, help = "Title of the song")
-    parser.add_argument("--verbose", type = str, help = "print the output (it will always be saved to a json file in the /Data folder)")
+    parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', help='Be verbose')
     args = parser.parse_args()
 
     s = Scraper(3)
 
     pathlib.Path("Data/").mkdir(exist_ok = True)
 
-    s.generate_output(args.artist, args.title)
+    s.generate_output(args.title, args.verbose)
 
     #s.generate_output('Donna-Summer', 'I-Feel-Love')
     #s.generate_output('Elvis-Presley', 'A-Little-Less-Conversation')
