@@ -20,4 +20,4 @@ def reduce(dataset):
     return df
 
 if __name__ == "__main__":
-    reduce("Data\genres_csv\electronic_analyzed.csv")
+    reduce("Data/genres_csv/folk_analyzed.csv")

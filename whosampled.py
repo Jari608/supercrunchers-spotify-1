@@ -163,7 +163,7 @@ class Scraper:
 
             location = "Data/json/{}_{}.json".format(artist, title)
             print("\n\n###################\n\n")
-            print(str(nr + 1) + "/" + str(len_df))
+            print(str(nr) + "/" + str(len_df))
             print("\n\n###################\n\n")
             
             if not os.path.exists(location):
@@ -199,7 +199,7 @@ class Scraper:
                     return location
                 
                 else:
-                    print("no info found on spotify for {} - {}".format(artist, title))
+                    print("no info found on spotify for {}".format(input))
                     return None
             
             else:
