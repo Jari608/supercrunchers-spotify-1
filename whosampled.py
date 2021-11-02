@@ -148,62 +148,63 @@ class Scraper:
 
         return cov, rem, sam
     
-    def generate_output(self, input, nr, verbose):
+    def generate_output(self, input, nr, nr_last, len_df, verbose):
         
-        
-        s = Scraper(3)
-
-        artist, title = s.search(input)
-        
-        if artist == None and title == None:
-            print("{} not found on WhoSampled".format(input))
-        else:
-            print("Retrieving data for {} - {}".format(artist, title))
-
-        location = "Data/json/{}_{}.json".format(artist, title)
-        print("\n\n###################\n\n")
-        print(nr)
-        print("\n\n###################\n\n")
-        
-        if not os.path.exists(location):
-            if not artist == None:
+        if nr > nr_last:
             
-                covers, remixes, sampled = s.get_tracks(artist, title)
+            s = Scraper(3)
 
-                covers_dict = {x: spotify_fetch(x) for x in covers}
-                remixes_dict = {x: spotify_fetch(re.sub(r'^.*?\'s ', ' ', x)) for x in remixes} #remixes get found better without original artist on spotify
-                samples_dict = {x: spotify_fetch(x) for x in sampled}
+            artist, title = s.search(input)
+            
+            if artist == None and title == None:
+                print("{} not found on WhoSampled".format(input))
+            else:
+                print("Retrieving data for {} - {}".format(artist, title))
 
-                data = {}
-                data['Artist'] = artist
-                data['title'] = title
-                data['Metrics'] = []
-                data['Metrics'].append({
-                    'n_covers': len(covers),
-                    'n_remixes': len(remixes),
-                    'n_sampled': len(sampled) 
-                })
-                data['covers'] = covers_dict
-                data['remixes'] = remixes_dict
-                data['sampled'] = samples_dict
-                data['spotify_data'] = spotify_fetch(artist + ' ' + title)
-
-                with open(location, "w") as f:
-                    json.dump(data, f)
-
-                if verbose:
-                    print(json.dumps(data, indent = 4))
+            location = "Data/json/{}_{}.json".format(artist, title)
+            print("\n\n###################\n\n")
+            print(str(nr + 1) + "/" + str(len_df))
+            print("\n\n###################\n\n")
+            
+            if not os.path.exists(location):
+                if not artist == None:
                 
-                print("{} created".format(location))
-                return location
+                    covers, remixes, sampled = s.get_tracks(artist, title)
+
+                    covers_dict = {x: spotify_fetch(x) for x in covers}
+                    remixes_dict = {x: spotify_fetch(re.sub(r'^.*?\'s ', ' ', x)) for x in remixes} #remixes get found better without original artist on spotify
+                    samples_dict = {x: spotify_fetch(x) for x in sampled}
+
+                    data = {}
+                    data['Artist'] = artist
+                    data['title'] = title
+                    data['Metrics'] = []
+                    data['Metrics'].append({
+                        'n_covers': len(covers),
+                        'n_remixes': len(remixes),
+                        'n_sampled': len(sampled) 
+                    })
+                    data['covers'] = covers_dict
+                    data['remixes'] = remixes_dict
+                    data['sampled'] = samples_dict
+                    data['spotify_data'] = spotify_fetch(artist + ' ' + title)
+
+                    with open(location, "w") as f:
+                        json.dump(data, f)
+
+                    if verbose:
+                        print(json.dumps(data, indent = 4))
+                    
+                    print("{} created".format(location))
+                    return location
+                
+                else:
+                    print("no info found on spotify for {} - {}".format(artist, title))
+                    return None
             
             else:
-                print("no info found on spotify for {} - {}".format(artist, title))
-                return None
-        
-        else:
-            print("{} already created.".format(location))
-            return location
+                print("{} already created.".format(location))
+                return location
 
 
 if __name__ == "__main__":
