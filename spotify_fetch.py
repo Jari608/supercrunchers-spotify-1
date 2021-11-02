@@ -9,9 +9,7 @@ import base64
 '''
 Information on how to set environment variables: https://spotipy.readthedocs.io/en/2.19.0/#redirect-uri
 '''
-#os.environ["SPOTIPY_REDIRECT_URI"] = "http://localhost:5555"
-#os.environ["SPOTIPY_CLIENT_ID"] = "1501cd1d65ad49c8bfc8e55c1da10843" 
-#os.environ["SPOTIPY_CLIENT_SECRET"] = "59e88c92c64c4ff1b3c1ade1ae1279f0" 
+
 
 SPOTIPY_REDIRECT_URI = "http://localhost:5555"
 SPOTIPY_CLIENT_ID = ""
