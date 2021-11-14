@@ -1,4 +1,4 @@
-from whosampled import Scraper
+from whosampled import Generate 
 from reduce_dataset import reduce
 
 import pathlib
@@ -12,7 +12,8 @@ def rowIndex(row):
 def analyse_list(csv_loc, last):
 
     print("started")
-    s = Scraper(3)
+    
+    g = Generate()
 
     genre_df = pd.read_csv(csv_loc)
 
@@ -21,7 +22,7 @@ def analyse_list(csv_loc, last):
     #genre_df = genre_df.head(10)
     genre_df['search_term'] = genre_df[['firstartist', 'trackname']].apply(lambda x: ' '.join(x), axis =1)
     genre_df['rowIndex'] = genre_df.apply(rowIndex, axis=1)
-    genre_df['sample_data_location'] = genre_df.apply(lambda x: s.generate_output(x['search_term'], x['rowIndex'], last, len_df, True), axis = 1)
+    genre_df['sample_data_location'] = genre_df.apply(lambda x: g.generate_output(x['search_term'], x['rowIndex'], last, len_df, True), axis = 1)
 
     print(genre_df)
 

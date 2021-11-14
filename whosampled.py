@@ -7,24 +7,29 @@ import os
 
 from bs4 import BeautifulSoup
 
-from spotify_fetch import fetch as spotify_fetch
+from spotify_fetch import SpFetch
 '''
-## WHOSAMPLED SCRAPER ##
 
-Author: Jari Burgers
-Course: SuperCrunchers - JADS Den Bosch
-
-This Scraper fetches all remixes, covers and sampled track for a given track.
-For each remix, cover or sample, track information is scraped from spotify.
-For each track, a json file is created containing the information for each song.
 
 '''
 
 class Scraper:
     '''
-    Class: Scraper
+    WHOSAMPLED SCRAPER
+
+    Author: Jari Burgers
+    Course: SuperCrunchers - JADS Den Bosch
+
+    This Scraper fetches all remixes, covers and sampled track for a given track.
+    For each remix, cover or sample, track information is scraped from spotify.
+    For each track, a json file is created containing the information for each song.
 
     This class contains all functions needed to retrieve track info from WhoSampled
+
+    - `__init__`: call `Scraper()` to init function
+    - `search(self, song_title)`: Querie whosampled.com
+    - `fetch(self, url)`: Scrapes songs from cover, sample or remix page
+    - `fetch_main_page_info(self, url)`: Scrapes songs from main page
 
     '''
 
@@ -42,18 +47,23 @@ class Scraper:
             "User-Agent":
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
         }
+       
     
     def search(self, song_title): #function from samplify
-        """ Queries whosampled.com for song, returns relevant links
+        """ 
+        ### function from samplify ###
+
+        Queries whosampled.com for song, returns relevant links
+
         Description:
         - Builds query string with `song_title` and `artist_name`
         - whosampled is doing the heavy lifting for 'relevance',
           as only the top result for a given query is taken
-        Parameters:
-          song_title:
-          - <str> song title, e.g 'Teenage Love'
-          artist_name:
-          - <str> artist name, e.g 'Slick Rick'
+          Parameters:
+            - song_title:
+                - <str> song title, e.g 'Teenage Love'
+            - artist_name:
+                - <str> artist name, e.g 'Slick Rick'
         """
 
         query = song_title.replace(' ', '%20')
@@ -74,6 +84,19 @@ class Scraper:
         return link_r[0], link_r[1]
         
     def fetch(self, url):
+        """ 
+        Scrapes all songs by finding image descriptions at whosampled.com Covered, Remixed or Sampled page.
+        returns a list with all unique song titles.
+        - include `.../?cp=` at the end of the link, the function itterates over the pages
+        - to scrape info from the main page use: `fetch_main_page_info(self, url)`
+
+        Description:
+        - Builds query string with 'url'
+
+        - Parameters:
+            - url: <str> url, e.g 'https://www.whosampled.com/Donna-Summer/I-Feel-Love/covered/?cp=
+
+        """
 
         songs = []
 
@@ -93,6 +116,18 @@ class Scraper:
         return songs
 
     def fetch_main_page_info(self, url):
+        """ 
+        Scrapes all songs by finding image descriptions at whosampled.com main song page.
+        returns lists of remixes, covers and samples with all unique song titles.
+        - to scrape info from the sampled, covered or remixed page use: `fetch(self, url)`
+
+        Description:
+        - Builds query string with 'url'
+
+        - Parameters:
+            - url: <str> url, e.g 'https://www.whosampled.com/Donna-Summer/I-Feel-Love/
+
+        """
 
         cover  = []
         remix  = []
@@ -117,94 +152,116 @@ class Scraper:
                     print('source unknown')
 
         return  cover, remix, sample
-        
+            
 
     def get_tracks(self, artist, title):
-      
-        s = Scraper(3)
+        """ 
+        Queries all songs by scraping image descriptions from whosampled.com.
+        returns lists of remixes, covers and samples with all unique song titles.
+        - Only use `title` and `artist` as returned by `search(self, song_title)`
+
+        Description:
+        - Builds query string with 'url'
+
+        - Parameters:
+            - title:
+                - <str> song title, e.g 'Donna-Summer'
+            - artist:
+                - <str> artist name, e.g 'I-Feel-Love'
+
+        """
+        
+        #s = Scraper(3)
+
 
         response_cov = []
         response_rem = []
         response_sam = []
 
         url_main = f'https://www.whosampled.com/{artist}/{title}/'.format(artist = artist, title = title)
-        cover, remix, sample = s.fetch_main_page_info(url_main)
+        cover, remix, sample = self.fetch_main_page_info(url_main)
         response_cov.append(cover)
         response_rem.append(remix)
         response_sam.append(sample)
 
         url = f'https://www.whosampled.com/{artist}/{title}/covered/?cp='.format(artist = artist, title = title)
-        response_cov.append(s.fetch(url))
+        response_cov.append(self.fetch(url))
 
         url = f'https://www.whosampled.com/{artist}/{title}/remixed/?cp='.format(artist = artist, title = title)
-        response_rem.append(s.fetch(url))
+        response_rem.append(self.fetch(url))
 
         url = f'https://www.whosampled.com/{artist}/{title}/sampled/?cp='.format(artist = artist, title = title)
-        response_sam.append(s.fetch(url))
+        response_sam.append(self.fetch(url))
 
         cov = set([item for sublist in response_cov for item in sublist])
         rem = set([item for sublist in response_rem for item in sublist])
         sam = set([item for sublist in response_sam for item in sublist])
 
         return cov, rem, sam
+
+class Generate:
     
+    def __init__(self):
+         self.sp = SpFetch()
+         self.s = Scraper(3)
+
     def generate_output(self, input, nr, nr_last, len_df, verbose):
-        
+
         if nr > nr_last:
-            
-            s = Scraper(3)
-
-            artist, title = s.search(input)
-            
-            if artist == None and title == None:
-                print("{} not found on WhoSampled".format(input))
-            else:
-                print("Retrieving data for {} - {}".format(artist, title))
-
-            location = "Data/json/{}_{}.json".format(artist, title)
             print("\n\n###################\n\n")
             print(str(nr) + "/" + str(len_df))
             print("\n\n###################\n\n")
             
-            if not os.path.exists(location):
-                if not artist == None:
-                
-                    covers, remixes, sampled = s.get_tracks(artist, title)
 
-                    covers_dict = {x: spotify_fetch(x) for x in covers}
-                    remixes_dict = {x: spotify_fetch(re.sub(r'^.*?\'s ', ' ', x)) for x in remixes} #remixes get found better without original artist on spotify
-                    samples_dict = {x: spotify_fetch(x) for x in sampled}
+            artist, title = self.s.search(input)
+            
+            if artist == None and title == None:
+                print("{} not found on WhoSampled".format(input))
+            else:
+                print("Retrieving data for {} - {}".format(artist.replace("*","_"), title.replace("*","_")))
 
-                    data = {}
-                    data['Artist'] = artist
-                    data['title'] = title
-                    data['Metrics'] = []
-                    data['Metrics'].append({
-                        'n_covers': len(covers),
-                        'n_remixes': len(remixes),
-                        'n_sampled': len(sampled) 
-                    })
-                    data['covers'] = covers_dict
-                    data['remixes'] = remixes_dict
-                    data['sampled'] = samples_dict
-                    data['spotify_data'] = spotify_fetch(artist + ' ' + title)
+                location = "Data/json/{}_{}.json".format(artist.replace("*","_"), title.replace("*","_"))
 
-                    with open(location, "w") as f:
-                        json.dump(data, f)
-
-                    if verbose:
-                        print(json.dumps(data, indent = 4))
+            
+                if not os.path.exists(location):
+                    if not artist == None:
                     
-                    print("{} created".format(location))
-                    return location
+                        covers, remixes, sampled = self.s.get_tracks(artist, title)
+
+                        covers_dict = {x: self.sp.fetch(x) for x in covers}
+                        remixes_dict = {x: self.sp.fetch(re.sub(r'^.*?\'s ', ' ', x)) for x in remixes} #remixes get found better without original artist on spotify
+                        samples_dict = {x: self.sp.fetch(x) for x in sampled}
+
+                        data = {}
+                        data['Artist'] = artist
+                        data['title'] = title
+                        data['Metrics'] = []
+                        data['Metrics'].append({
+                            'n_covers': len(covers),
+                            'n_remixes': len(remixes),
+                            'n_sampled': len(sampled) 
+                        })
+                        data['covers'] = covers_dict
+                        data['remixes'] = remixes_dict
+                        data['sampled'] = samples_dict
+                        data['spotify_data'] = self.sp.fetch(artist + ' ' + title)
+
+                        with open(location, "w") as f:
+                            json.dump(data, f)
+
+                        if verbose:
+                            print(json.dumps(data, indent = 4))
+                        
+                        print("{} created".format(location))
+                        return location
+                    
+                    else:
+                        print("no info found on spotify for {}".format(input))
+                        return None
                 
                 else:
-                    print("no info found on spotify for {}".format(input))
-                    return None
-            
-            else:
-                print("{} already created.".format(location))
-                return location
+                    print("{} already created.".format(location))
+                    return location
 
 
 if __name__ == "__main__":
@@ -216,12 +273,9 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', help='Be verbose')
     args = parser.parse_args()
 
-    s = Scraper(3)
+    g =Generate()
 
     pathlib.Path("Data/").mkdir(exist_ok = True)
     pathlib.Path("Data/json/").mkdir(exist_ok = True)
 
-    s.generate_output(args.title, args.verbose)
-
-    #s.generate_output('Donna-Summer', 'I-Feel-Love')
-    #s.generate_output('Elvis-Presley', 'A-Little-Less-Conversation')
+    g.generate_output(args.title, args.verbose)
