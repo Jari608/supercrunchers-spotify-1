@@ -10,8 +10,8 @@ Information on how to set environment variables: https://spotipy.readthedocs.io/
 
 
 SPOTIPY_REDIRECT_URI = "http://localhost:5555"
-SPOTIPY_CLIENT_ID = ""
-SPOTIPY_CLIENT_SECRET = "" 
+SPOTIPY_CLIENT_ID = "1501cd1d65ad49c8bfc8e55c1da10843"
+SPOTIPY_CLIENT_SECRET = "59e88c92c64c4ff1b3c1ade1ae1279f0" 
 
 
 def auth():

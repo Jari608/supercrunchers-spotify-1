@@ -49,6 +49,7 @@ def add_top_n(dataset, min_remix, category):
         column_set.append(['instrumentalness{}'.format(idx + 1), ['instrumentalness', idx]])
         column_set.append(['key{}'.format(idx + 1), ['key', idx]])
         column_set.append(['liveness{}'.format(idx + 1), ['liveness', idx]])
+        column_set.append(['loudness{}'.format(idx + 1), ['loudness', idx]])
         column_set.append(['speechiness{}'.format(idx + 1), ['speechiness', idx]])
         column_set.append(['tempo{}'.format(idx + 1), ['tempo', idx]])
         column_set.append(['time_signature{}'.format(idx + 1), ['time_signature', idx]])
@@ -84,7 +85,7 @@ def merge_datasets(min_remix, category, file_name):
     final_df.to_csv('Data/genres_csv/{}.csv'.format(file_name))
 
 if __name__ == "__main__":
-    '''
+    
     merge_datasets(3, 'covers', 'final_set_covers_top3')
     merge_datasets(2, 'covers', 'final_set_covers_top2')
     merge_datasets(1, 'covers', 'final_set_covers_top1')
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     merge_datasets(3, 'remixes', 'final_set_remixes_top3')
     merge_datasets(2, 'remixes', 'final_set_remixes_top2')
     merge_datasets(1, 'remixes', 'final_set_remixes_top1')
-    '''
+    
     merge_datasets(3, 'sampled', 'final_set_sampled_top3')
     merge_datasets(2, 'sampled', 'final_set_sampled_top2')
     merge_datasets(1, 'sampled', 'final_set_sampled_top1')
